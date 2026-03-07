@@ -13,9 +13,15 @@ export async function createClient() {
         return cookieStore.getAll();
       },
       setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value, options }) => {
-          cookieStore.set(name, value, options);
-        });
+        // In Server Components, Next.js forbids mutating cookies.
+        // Route Handlers and Server Actions can write them normally.
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
+        } catch {
+          // Safe to ignore here; session refresh writes should happen in middleware/route handlers.
+        }
       },
     },
   });

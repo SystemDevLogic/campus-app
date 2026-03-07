@@ -32,7 +32,7 @@ create table if not exists public.plans (
   category text not null,
   campus text not null,
   starts_at timestamptz not null,
-  capacity int not null check (capacity > 1),
+  capacity int check (capacity is null or capacity > 1),
   status text not null default 'active' check (status in ('active', 'cancelled')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

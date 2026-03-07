@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 
 import { createClient } from "@/lib/supabase/server";
 
@@ -47,12 +48,29 @@ export default async function DashboardPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-6 py-16 text-zinc-900">
-      <p className="text-xs uppercase tracking-[0.2em] text-zinc-600">Dashboard</p>
+    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-6 py-16 text-zinc-900 dark:text-zinc-100">
+      <p className="text-xs uppercase tracking-[0.2em] text-zinc-600 dark:text-zinc-400">Dashboard</p>
       <h1 className="mt-3 text-3xl font-semibold">
         Hola, {profile.first_name} {profile.last_name}
       </h1>
-      <p className="mt-4 text-zinc-700">Perfil listo. Siguiente objetivo: CRUD de planes y feed social.</p>
+      <p className="mt-4 text-zinc-700 dark:text-zinc-300">
+        Perfil listo. Siguiente objetivo: CRUD de planes y feed social.
+      </p>
+
+      <div className="mt-6">
+        <Link
+          href="/plans/new"
+          className="inline-flex rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-zinc-800"
+        >
+          Crear plan
+        </Link>
+        <Link
+          href="/plans"
+          className="ml-2 inline-flex rounded-lg border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-800 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-200 dark:hover:border-zinc-500"
+        >
+          Ver planes
+        </Link>
+      </div>
 
       <div className="mt-8 rounded-xl border border-zinc-800 bg-zinc-900 p-4">
         <p className="text-sm text-zinc-400">Universidad</p>
