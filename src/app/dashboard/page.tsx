@@ -23,7 +23,11 @@ function isProfileComplete(profile: {
   );
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: Readonly<{ searchParams?: Promise<Record<string, string | string[] | undefined>> }>) {
+  const query = (await searchParams) ?? {};
+  const superadminDenied = query.superadmin_denied === "1";
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getUser();
 
@@ -70,6 +74,12 @@ export default async function DashboardPage() {
       <p className="mt-4 text-zinc-700 dark:text-zinc-300">
         Perfil listo. Siguiente objetivo: CRUD de planes y feed social.
       </p>
+
+      {superadminDenied ? (
+        <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+          Tu cuenta no tiene acceso al panel superadmin.
+        </p>
+      ) : null}
 
       <p className="mt-2 inline-flex w-fit rounded-full border border-zinc-300 px-2 py-1 text-xs text-zinc-700 dark:border-zinc-700 dark:text-zinc-300">
         Rol: {roleLabel(role)}
@@ -123,6 +133,20 @@ export default async function DashboardPage() {
           >
             Configurar plataformas y links fijos
           </Link>
+          <Link
+            href="/admin/roles"
+            className="inline-flex rounded-lg border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-800 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-200 dark:hover:border-zinc-500"
+          >
+            Gestionar roles administrativos
+          </Link>
+          {role === "superadmin" ? (
+            <Link
+              href="/superadmin/dashboard"
+              className="inline-flex rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-zinc-800"
+            >
+              Abrir dashboard admin
+            </Link>
+          ) : null}
         </div>
       ) : null}
 
