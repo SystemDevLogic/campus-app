@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { canCreatePlans, type AppRole } from "@/lib/constants/roles";
 import { createClient } from "@/lib/supabase/server";
 
 import CreatePlanForm from "./CreatePlanForm";
@@ -32,7 +33,7 @@ export default async function NewPlanPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("first_name, last_name, university, birth_date, interests")
+    .select("first_name, last_name, university, birth_date, interests, role")
     .eq("id", authData.user.id)
     .maybeSingle();
 
@@ -47,6 +48,11 @@ export default async function NewPlanPage() {
     })
   ) {
     redirect("/onboarding");
+  }
+
+  const role = (profile.role ?? "general_user") as AppRole;
+  if (!canCreatePlans(role)) {
+    redirect("/plans?organizerOnly=1");
   }
 
   return (

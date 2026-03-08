@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/browser";
@@ -16,6 +16,20 @@ type OnboardingFormProps = {
   initialInterests: string[];
 };
 
+function isAtLeast16YearsOld(dateValue: string) {
+  if (!dateValue) return false;
+  const today = new Date();
+  const birth = new Date(`${dateValue}T00:00:00`);
+
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+
+  return age >= 16;
+}
+
 export default function OnboardingForm({
   userId,
   universities,
@@ -24,7 +38,7 @@ export default function OnboardingForm({
   initialUniversity,
   initialBirthDate,
   initialInterests,
-}: OnboardingFormProps) {
+}: Readonly<OnboardingFormProps>) {
   const router = useRouter();
   const [firstName, setFirstName] = useState(initialFirstName);
   const [lastName, setLastName] = useState(initialLastName);
@@ -49,22 +63,7 @@ export default function OnboardingForm({
     });
   }
 
-  function isAtLeast16YearsOld(dateValue: string) {
-    if (!dateValue) return false;
-    const today = new Date();
-    const birth = new Date(`${dateValue}T00:00:00`);
-
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--;
-    }
-
-    return age >= 16;
-  }
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function saveProfile() {
     setError(null);
 
     if (!firstName.trim()) {
@@ -116,6 +115,11 @@ export default function OnboardingForm({
     router.push("/dashboard");
     router.refresh();
   }
+
+  const handleSubmit: React.ComponentProps<"form">["onSubmit"] = (event) => {
+    event.preventDefault();
+    void saveProfile();
+  };
 
   return (
     <form onSubmit={handleSubmit} className="mt-6 space-y-4">

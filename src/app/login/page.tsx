@@ -14,7 +14,7 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    const appOrigin = process.env.NEXT_PUBLIC_APP_ORIGIN ?? window.location.origin;
+    const appOrigin = process.env.NEXT_PUBLIC_APP_ORIGIN ?? globalThis.location.origin;
 
     const supabase = createClient();
     const { error: authError } = await supabase.auth.signInWithOAuth({
