@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { PLAN_CATEGORIES } from "@/lib/constants/plans";
 import { canCreatePlans, type AppRole } from "@/lib/constants/roles";
+import { getOrganizationSessionCookieName, readOrganizationSessionToken } from "@/lib/organizations/auth";
 import { createClient } from "@/lib/supabase/server";
 
 type SearchParams = {
@@ -54,6 +56,70 @@ type PlansFilters = {
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
+type ActorContext = {
+  userId: string;
+  role: AppRole;
+  isOrganization: boolean;
+};
+
+async function resolveActorContext(supabase: SupabaseServerClient): Promise<ActorContext> {
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (!authError && authData.user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("first_name, last_name, university, birth_date, interests, role")
+      .eq("id", authData.user.id)
+      .maybeSingle();
+
+    if (
+      !profile ||
+      !isProfileComplete({
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        university: profile.university,
+        birth_date: profile.birth_date,
+        interests: profile.interests,
+      })
+    ) {
+      redirect("/onboarding");
+    }
+
+    return {
+      userId: authData.user.id,
+      role: (profile.role ?? "general_user") as AppRole,
+      isOrganization: false,
+    };
+  }
+
+  const cookieStore = await cookies();
+  const token = cookieStore.get(getOrganizationSessionCookieName())?.value;
+  const orgSession = readOrganizationSessionToken(token);
+  if (!orgSession) {
+    redirect("/login");
+  }
+
+  const { data: account } = await supabase
+    .from("organization_accounts")
+    .select("id, is_active, organizations!inner(manager_user_id)")
+    .eq("id", orgSession.accountId)
+    .maybeSingle();
+
+  if (!account?.is_active) {
+    redirect("/organizations/access");
+  }
+
+  const organization = Array.isArray(account.organizations) ? account.organizations[0] : account.organizations;
+  if (!organization?.manager_user_id) {
+    redirect("/organizations/access");
+  }
+
+  return {
+    userId: organization.manager_user_id,
+    role: "event_organizer",
+    isOrganization: true,
+  };
+}
+
 async function joinPlanAction(formData: FormData) {
   "use server";
 
@@ -63,20 +129,12 @@ async function joinPlanAction(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) {
-    redirect("/login");
+  const actor = await resolveActorContext(supabase);
+  const userId = actor.userId;
+
+  if (actor.isOrganization) {
+    redirect("/plans?organizerBlocked=1");
   }
-
-  const userId = authData.user.id;
-
-  const { data: currentProfile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", userId)
-    .maybeSingle();
-
-  const currentRole = (currentProfile?.role ?? "general_user") as AppRole;
 
   const { data: existingMember } = await supabase
     .from("plan_members")
@@ -99,7 +157,7 @@ async function joinPlanAction(formData: FormData) {
     redirect("/plans?joinError=1");
   }
 
-  if (currentRole === "event_organizer" && plan.creator_id !== userId) {
+  if (actor.role === "event_organizer" && plan.creator_id !== userId) {
     redirect("/plans?organizerBlocked=1");
   }
 
@@ -135,16 +193,16 @@ async function leavePlanAction(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) {
-    redirect("/login");
+  const actor = await resolveActorContext(supabase);
+  if (actor.isOrganization) {
+    redirect("/plans?organizerBlocked=1");
   }
 
   const { error: deleteError } = await supabase
     .from("plan_members")
     .delete()
     .eq("plan_id", planId)
-    .eq("user_id", authData.user.id)
+    .eq("user_id", actor.userId)
     .neq("role", "host");
 
   if (deleteError) {
@@ -343,37 +401,6 @@ function PlanCard({ plan, membership, role, currentUserId }: Readonly<PlanCardPr
   );
 }
 
-async function requireAuthedProfile(supabase: SupabaseServerClient) {
-  const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) {
-    redirect("/login");
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("first_name, last_name, university, birth_date, interests, role")
-    .eq("id", authData.user.id)
-    .maybeSingle();
-
-  if (
-    !profile ||
-    !isProfileComplete({
-      first_name: profile.first_name,
-      last_name: profile.last_name,
-      university: profile.university,
-      birth_date: profile.birth_date,
-      interests: profile.interests,
-    })
-  ) {
-    redirect("/onboarding");
-  }
-
-  return {
-    userId: authData.user.id,
-    role: (profile.role ?? "general_user") as AppRole,
-  };
-}
-
 async function fetchPlans(supabase: SupabaseServerClient, filters: PlansFilters) {
   let query = supabase
     .from("plans")
@@ -448,8 +475,10 @@ export default async function PlansPage({
   const organizerBlocked = filters.organizerBlocked === "1";
 
   const supabase = await createClient();
-  const { userId, role } = await requireAuthedProfile(supabase);
-  const allowPlanCreation = canCreatePlans(role);
+  const actor = await resolveActorContext(supabase);
+  const userId = actor.userId;
+  const role = actor.role;
+  const allowPlanCreation = actor.isOrganization || canCreatePlans(role);
 
   const { data: plans, error: plansError } = await fetchPlans(supabase, { category, campus, date });
 
@@ -465,7 +494,7 @@ export default async function PlansPage({
         </div>
         <div className="flex gap-2">
           <Link
-            href="/dashboard"
+            href={actor.isOrganization ? "/organizations/dashboard" : "/dashboard"}
             className="inline-flex rounded-lg border border-zinc-300 px-4 py-2 text-sm text-zinc-800 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-200 dark:hover:border-zinc-500"
           >
             Dashboard

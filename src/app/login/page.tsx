@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import { createClient } from "@/lib/supabase/browser";
 
@@ -49,6 +50,13 @@ export default function LoginPage() {
         >
           {loading ? "Conectando..." : "Continuar con Google"}
         </button>
+
+        <Link
+          href="/organizations/access"
+          className="mt-3 block rounded-lg border border-zinc-300 px-4 py-2 text-center text-sm font-semibold text-zinc-100 hover:border-zinc-100"
+        >
+          Acceso de organizaciones (OTP / contrasena)
+        </Link>
 
         {error ? <p className="mt-3 text-sm text-red-400">{error}</p> : null}
       </div>

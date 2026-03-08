@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { getOrganizationSessionCookieName, readOrganizationSessionToken } from "@/lib/organizations/auth";
 import { createClient } from "@/lib/supabase/server";
 
 import ChatRoom from "./ChatRoom";
@@ -9,16 +11,47 @@ type PlanDetailPageProps = Readonly<{
   params: Promise<{ planId: string }>;
 }>;
 
+async function resolvePlanActorUserId(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (!authError && authData.user) {
+    return authData.user.id;
+  }
+
+  return getManagerUserIdFromOrganizationSession(supabase);
+}
+
+async function getManagerUserIdFromOrganizationSession(supabase: Awaited<ReturnType<typeof createClient>>) {
+
+  const cookieStore = await cookies();
+  const token = cookieStore.get(getOrganizationSessionCookieName())?.value;
+  const orgSession = readOrganizationSessionToken(token);
+  if (!orgSession) {
+    redirect("/login");
+  }
+
+  const { data: account } = await supabase
+    .from("organization_accounts")
+    .select("id, is_active, organizations!inner(manager_user_id)")
+    .eq("id", orgSession.accountId)
+    .maybeSingle();
+
+  if (!account?.is_active) {
+    redirect("/organizations/access");
+  }
+
+  const organization = Array.isArray(account.organizations) ? account.organizations[0] : account.organizations;
+  if (!organization?.manager_user_id) {
+    redirect("/organizations/access");
+  }
+
+  return organization.manager_user_id;
+}
+
 export default async function PlanDetailPage({ params }: PlanDetailPageProps) {
   const { planId } = await params;
   const supabase = await createClient();
 
-  const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user) {
-    redirect("/login");
-  }
-
-  const userId = authData.user.id;
+  const userId = await resolvePlanActorUserId(supabase);
 
   const { data: membership } = await supabase
     .from("plan_members")

@@ -2,7 +2,10 @@ import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { randomUUID } from "node:crypto";
+
 import { type AppRole, roleLabel } from "@/lib/constants/roles";
+import { createServiceClient } from "@/lib/supabase/service";
 import { createClient } from "@/lib/supabase/server";
 
 type MeetingPlatform = "google_meet" | "zoom" | "other";
@@ -60,6 +63,39 @@ async function getAdminContext() {
   return { supabase, userId, role };
 }
 
+async function ensureRequestEmailAllowed(supabase: Awaited<ReturnType<typeof createClient>>, email: string) {
+  const { data: conflictCheck } = await supabase.rpc("email_belongs_to_general_user", {
+    email_to_check: email,
+  });
+
+  if (conflictCheck === true) {
+    redirect("/admin/requests?emailConflict=1");
+  }
+}
+
+async function ensureSupabaseAuthUser(email: string) {
+  const serviceClient = createServiceClient();
+  const temporaryPassword = `${randomUUID()}Aa1!`;
+
+  const { error } = await serviceClient.auth.admin.createUser({
+    email,
+    password: temporaryPassword,
+    email_confirm: true,
+    user_metadata: {
+      account_type: "organization",
+    },
+  });
+
+  if (!error) {
+    return;
+  }
+
+  const alreadyExists = /already|exists|registered/i.test(error.message);
+  if (!alreadyExists) {
+    redirect("/admin/requests?error=1");
+  }
+}
+
 async function approveRequestAction(formData: FormData) {
   "use server";
 
@@ -83,28 +119,75 @@ async function approveRequestAction(formData: FormData) {
     redirect("/admin/requests?error=1");
   }
 
+  await ensureRequestEmailAllowed(supabase, requestRow.contact_email);
+
   const { data: existingOrganization } = await supabase
     .from("organizations")
     .select("id")
     .eq("approved_request_id", requestId)
     .maybeSingle();
 
-  if (!existingOrganization) {
-    const { error: organizationError } = await supabase.from("organizations").insert({
-      organization_name: requestRow.organization_name,
-      organization_type_id: requestRow.organization_type_id,
-      organization_type_other: requestRow.organization_type_other,
-      organization_email: requestRow.contact_email,
-      organization_phone: requestRow.contact_phone,
-      manager_user_id: requestRow.requester_user_id,
-      approved_request_id: requestRow.id,
-      status: "active",
-    });
+  let organizationId = existingOrganization?.id ?? null;
 
-    if (organizationError) {
+  if (!existingOrganization) {
+    const { data: createdOrganization, error: organizationError } = await supabase
+      .from("organizations")
+      .insert({
+        organization_name: requestRow.organization_name,
+        organization_type_id: requestRow.organization_type_id,
+        organization_type_other: requestRow.organization_type_other,
+        organization_email: requestRow.contact_email,
+        organization_phone: requestRow.contact_phone,
+        manager_user_id: requestRow.requester_user_id,
+        approved_request_id: requestRow.id,
+        status: "active",
+      })
+      .select("id")
+      .maybeSingle();
+
+    if (organizationError || !createdOrganization) {
       redirect("/admin/requests?error=1");
     }
+
+    organizationId = createdOrganization.id;
   }
+
+  if (!organizationId) {
+    redirect("/admin/requests?error=1");
+  }
+
+  const { data: existingAccount } = await supabase
+    .from("organization_accounts")
+    .select("id")
+    .eq("organization_id", organizationId)
+    .maybeSingle();
+
+  let organizationAccountId = existingAccount?.id ?? null;
+
+  if (!existingAccount) {
+    const { data: createdAccount, error: accountError } = await supabase
+      .from("organization_accounts")
+      .insert({
+        organization_id: organizationId,
+        email: requestRow.contact_email,
+        first_login_completed: false,
+        is_active: true,
+      })
+      .select("id")
+      .maybeSingle();
+
+    if (accountError || !createdAccount) {
+      redirect("/admin/requests?error=1");
+    }
+
+    organizationAccountId = createdAccount.id;
+  }
+
+  if (!organizationAccountId) {
+    redirect("/admin/requests?error=1");
+  }
+
+  await ensureSupabaseAuthUser(requestRow.contact_email);
 
   const { error: updateError } = await supabase
     .from("organization_creation_requests")
@@ -156,6 +239,11 @@ async function rejectRequestAction(formData: FormData) {
   redirect("/admin/requests?rejected=1");
 }
 
+async function runBrevoHealthCheckAction() {
+  "use server";
+  redirect("/admin/requests");
+}
+
 export default async function AdminRequestsPage({
   searchParams,
 }: Readonly<{ searchParams?: Promise<Record<string, string | string[] | undefined>> }>) {
@@ -163,6 +251,7 @@ export default async function AdminRequestsPage({
   const approved = query.approved === "1";
   const rejected = query.rejected === "1";
   const error = query.error === "1";
+  const emailConflict = query.emailConflict === "1";
 
   const { supabase, role } = await getAdminContext();
 
@@ -186,7 +275,7 @@ export default async function AdminRequestsPage({
 
         {approved ? (
           <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-            Solicitud aprobada y organizacion creada.
+            Solicitud aprobada y organizacion creada. El OTP se enviara al primer intento de ingreso.
           </p>
         ) : null}
         {rejected ? (
@@ -197,6 +286,11 @@ export default async function AdminRequestsPage({
         {error ? (
           <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
             No se pudo completar la accion.
+          </p>
+        ) : null}
+        {emailConflict ? (
+          <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            El correo de esta solicitud pertenece a un usuario general y no puede usarse para organizacion.
           </p>
         ) : null}
 

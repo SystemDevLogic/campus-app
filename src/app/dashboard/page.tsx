@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { cookies } from "next/headers";
 
+import { getOrganizationSessionCookieName, readOrganizationSessionToken } from "@/lib/organizations/auth";
 import { canCreatePlans, roleLabel, type AppRole } from "@/lib/constants/roles";
 import { createClient } from "@/lib/supabase/server";
 
@@ -26,6 +28,14 @@ export default async function DashboardPage() {
   const { data, error } = await supabase.auth.getUser();
 
   if (error || !data.user) {
+    const cookieStore = await cookies();
+    const orgToken = cookieStore.get(getOrganizationSessionCookieName())?.value;
+    const orgSession = readOrganizationSessionToken(orgToken);
+
+    if (orgSession) {
+      redirect("/organizations/dashboard");
+    }
+
     redirect("/login");
   }
 

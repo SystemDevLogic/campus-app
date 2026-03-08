@@ -91,6 +91,16 @@ async function getLatestRequestSummary(supabase: Awaited<ReturnType<typeof creat
   };
 }
 
+async function ensureOrganizationEmailAllowed(supabase: Awaited<ReturnType<typeof createClient>>, email: string) {
+  const { data: emailConflict } = await supabase.rpc("email_belongs_to_general_user", {
+    email_to_check: email,
+  });
+
+  if (emailConflict === true) {
+    redirect("/organizations/request?emailConflict=1");
+  }
+}
+
 type FeedbackProps = {
   role: AppRole;
   sent: boolean;
@@ -98,6 +108,7 @@ type FeedbackProps = {
   missingAdmin: boolean;
   invalidSlot: boolean;
   slotTaken: boolean;
+  emailConflict: boolean;
   forbidden: boolean;
   latestRequestSummary: LatestRequestSummary | null;
 };
@@ -109,6 +120,7 @@ function RequestFeedback({
   missingAdmin,
   invalidSlot,
   slotTaken,
+  emailConflict,
   forbidden,
   latestRequestSummary,
 }: Readonly<FeedbackProps>) {
@@ -155,6 +167,12 @@ function RequestFeedback({
       {slotTaken ? (
         <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
           Ese horario ya fue reservado. Elige otro horario disponible.
+        </p>
+      ) : null}
+
+      {emailConflict ? (
+        <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+          Este correo pertenece a un usuario general y no puede usarse para cuenta de organizacion.
         </p>
       ) : null}
 
@@ -205,6 +223,8 @@ async function createOrganizationRequestAction(formData: FormData) {
   if (!requesterName || !contactEmail || !contactPhone || !organizationName || !organizationTypeId || !meetingPlatform) {
     redirect("/organizations/request?error=1");
   }
+
+  await ensureOrganizationEmailAllowed(supabase, contactEmail);
 
   const { count: availabilityCount } = await supabase
     .from("admin_availability")
@@ -298,6 +318,7 @@ export default async function OrganizationRequestPage({
   const missingAdmin = query.missingAdmin === "1";
   const invalidSlot = query.invalidSlot === "1";
   const slotTaken = query.slotTaken === "1";
+  const emailConflict = query.emailConflict === "1";
 
   const supabase = await createClient();
   const { data: authData, error: authError } = await supabase.auth.getUser();
@@ -371,6 +392,7 @@ export default async function OrganizationRequestPage({
           missingAdmin={missingAdmin}
           invalidSlot={invalidSlot}
           slotTaken={slotTaken}
+          emailConflict={emailConflict}
           forbidden={forbidden}
           latestRequestSummary={latestRequestSummary}
         />
