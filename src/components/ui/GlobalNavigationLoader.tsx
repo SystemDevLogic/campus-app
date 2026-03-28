@@ -28,11 +28,19 @@ function isEligibleClickTarget(target: HTMLElement, event: MouseEvent) {
 
   const button = target.closest("button");
   if (button) {
+    if (button.dataset.globalLoader !== "true") {
+      return false;
+    }
+
     return !button.disabled;
   }
 
   const inputButton = target.closest("input[type='submit'], input[type='button'], input[type='reset']");
   if (inputButton instanceof HTMLInputElement) {
+    if (inputButton.dataset.globalLoader !== "true") {
+      return false;
+    }
+
     return !inputButton.disabled;
   }
 

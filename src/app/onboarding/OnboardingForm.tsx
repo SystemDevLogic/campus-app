@@ -5,16 +5,25 @@ import { useRouter } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/browser";
 import { INTEREST_CATEGORIES } from "@/lib/constants/onboarding";
+import { type AppRole, roleLabel } from "@/lib/constants/roles";
 
 type OnboardingFormProps = {
   userId: string;
+  showRoleSelector: boolean;
   universities: string[];
   initialFirstName: string;
   initialLastName: string;
   initialUniversity: string;
   initialBirthDate: string;
   initialInterests: string[];
+  initialRole: AppRole;
 };
+
+const ROLE_OPTIONS: AppRole[] = ["general_user", "event_organizer", "admin", "superadmin"];
+
+function isValidRole(value: string): value is AppRole {
+  return value === "general_user" || value === "event_organizer" || value === "admin" || value === "superadmin";
+}
 
 function isAtLeast16YearsOld(dateValue: string) {
   if (!dateValue) return false;
@@ -32,12 +41,14 @@ function isAtLeast16YearsOld(dateValue: string) {
 
 export default function OnboardingForm({
   userId,
+  showRoleSelector,
   universities,
   initialFirstName,
   initialLastName,
   initialUniversity,
   initialBirthDate,
   initialInterests,
+  initialRole,
 }: Readonly<OnboardingFormProps>) {
   const router = useRouter();
   const [firstName, setFirstName] = useState(initialFirstName);
@@ -45,6 +56,7 @@ export default function OnboardingForm({
   const [university, setUniversity] = useState(initialUniversity);
   const [birthDate, setBirthDate] = useState(initialBirthDate);
   const [selectedInterests, setSelectedInterests] = useState<string[]>(initialInterests);
+  const [selectedRole, setSelectedRole] = useState<AppRole>(initialRole);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -91,6 +103,11 @@ export default function OnboardingForm({
       return;
     }
 
+    if (showRoleSelector && !isValidRole(selectedRole)) {
+      setError("Selecciona un rol valido.");
+      return;
+    }
+
     setLoading(true);
 
     const supabase = createClient();
@@ -102,6 +119,7 @@ export default function OnboardingForm({
         university: university.trim(),
         birth_date: birthDate,
         interests: selectedInterests,
+        role: showRoleSelector ? selectedRole : undefined,
       },
       { onConflict: "id" },
     );
@@ -173,6 +191,23 @@ export default function OnboardingForm({
           className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 outline-none focus:border-zinc-500"
         />
       </label>
+
+      {showRoleSelector ? (
+        <label className="block">
+          <span className="mb-1 block text-sm text-zinc-300">Rol (solo pruebas internas)</span>
+          <select
+            value={selectedRole}
+            onChange={(event) => setSelectedRole(event.target.value as AppRole)}
+            className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-zinc-100 outline-none focus:border-zinc-500"
+          >
+            {ROLE_OPTIONS.map((role) => (
+              <option key={role} value={role}>
+                {roleLabel(role)}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
 
       <fieldset className="block">
         <legend className="mb-2 block text-sm text-zinc-300">Intereses (categorias)</legend>

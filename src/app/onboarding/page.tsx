@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 import { getEcuadorUniversities } from "@/lib/universities";
+import { type AppRole } from "@/lib/constants/roles";
 
 import OnboardingForm from "./OnboardingForm";
 
@@ -23,6 +24,7 @@ function isProfileComplete(profile: {
 }
 
 export default async function OnboardingPage() {
+  const showRoleSelector = process.env.NEXT_PUBLIC_ENABLE_ROLE_SELECTOR === "true";
   const supabase = await createClient();
   const universities = await getEcuadorUniversities();
   const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -33,9 +35,11 @@ export default async function OnboardingPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("first_name, last_name, university, birth_date, interests")
+    .select("first_name, last_name, university, birth_date, interests, role")
     .eq("id", userData.user.id)
     .maybeSingle();
+
+  const initialRole = (profile?.role ?? "general_user") as AppRole;
 
   if (
     profile &&
@@ -60,12 +64,14 @@ export default async function OnboardingPage() {
 
         <OnboardingForm
           userId={userData.user.id}
+          showRoleSelector={showRoleSelector}
           universities={universities}
           initialFirstName={profile?.first_name ?? ""}
           initialLastName={profile?.last_name ?? ""}
           initialUniversity={profile?.university ?? ""}
           initialBirthDate={profile?.birth_date ?? ""}
           initialInterests={Array.isArray(profile?.interests) ? profile.interests : []}
+          initialRole={initialRole}
         />
       </div>
     </main>

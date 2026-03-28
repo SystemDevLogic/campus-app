@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { getOrganizationSessionCookieName, readOrganizationSessionToken } from "@/lib/organizations/auth";
 import { canCreatePlans, roleLabel, type AppRole } from "@/lib/constants/roles";
 import { createClient } from "@/lib/supabase/server";
+import MainWorkspaceShell from "@/components/ui/MainWorkspaceShell";
 
 function isProfileComplete(profile: {
   first_name: string | null;
@@ -28,6 +29,7 @@ export default async function DashboardPage({
 }: Readonly<{ searchParams?: Promise<Record<string, string | string[] | undefined>> }>) {
   const query = (await searchParams) ?? {};
   const superadminDenied = query.superadmin_denied === "1";
+  const roleSelectorTestingEnabled = process.env.NEXT_PUBLIC_ENABLE_ROLE_SELECTOR === "true";
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getUser();
 
@@ -66,14 +68,20 @@ export default async function DashboardPage({
   const allowPlanCreation = canCreatePlans(role);
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-6 py-16 text-zinc-900 dark:text-zinc-100">
-      <p className="text-xs uppercase tracking-[0.2em] text-zinc-600 dark:text-zinc-400">Dashboard</p>
-      <h1 className="mt-3 text-3xl font-semibold">
+    <MainWorkspaceShell role={role}>
+      <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-zinc-100">
+      <h1 className="text-3xl font-semibold">
         Hola, {profile.first_name} {profile.last_name}
       </h1>
-      <p className="mt-4 text-zinc-700 dark:text-zinc-300">
+      <p className="mt-2 text-zinc-300">
         Perfil listo. Siguiente objetivo: CRUD de planes y feed social.
       </p>
+
+      {roleSelectorTestingEnabled ? (
+        <p className="mt-3 inline-flex w-fit rounded-full border border-amber-300 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-800">
+          Modo pruebas: selector interno de rol activo
+        </p>
+      ) : null}
 
       {superadminDenied ? (
         <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
@@ -139,6 +147,12 @@ export default async function DashboardPage({
           >
             Gestionar roles administrativos
           </Link>
+          <Link
+            href="/admin/audit"
+            className="inline-flex rounded-lg border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-800 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-200 dark:hover:border-zinc-500"
+          >
+            Ver auditoria de roles
+          </Link>
           {role === "superadmin" ? (
             <Link
               href="/superadmin/dashboard"
@@ -150,7 +164,7 @@ export default async function DashboardPage({
         </div>
       ) : null}
 
-      <div className="mt-8 rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+      <div className="mt-8 rounded-xl border border-zinc-800 bg-zinc-950 p-4">
         <p className="text-sm text-zinc-400">Universidad</p>
         <p className="text-lg text-zinc-100">{profile.university}</p>
         <p className="mt-4 text-sm text-zinc-400">Fecha de nacimiento</p>
@@ -158,6 +172,7 @@ export default async function DashboardPage({
         <p className="mt-4 text-sm text-zinc-400">Intereses</p>
         <p className="text-zinc-100">{profile.interests.join(", ")}</p>
       </div>
-    </main>
+      </section>
+    </MainWorkspaceShell>
   );
 }

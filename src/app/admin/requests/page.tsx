@@ -1,10 +1,10 @@
-import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { randomUUID } from "node:crypto";
 
 import { type AppRole, roleLabel } from "@/lib/constants/roles";
+import AdminWorkspaceShell from "@/components/ui/AdminWorkspaceShell";
 import { createServiceClient } from "@/lib/supabase/service";
 import { createClient } from "@/lib/supabase/server";
 
@@ -264,12 +264,12 @@ export default async function AdminRequestsPage({
     .limit(100);
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-6 py-12 text-zinc-900 dark:text-zinc-100">
-      <Link href="/dashboard" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
-        {"<- Volver al dashboard"}
-      </Link>
-
-      <section className="mt-4 rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-zinc-100">
+    <AdminWorkspaceShell
+      role={role}
+      title="Revision de solicitudes"
+      subtitle="Gestiona aprobaciones, rechazos y creacion de organizaciones desde un panel unificado."
+    >
+      <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-zinc-100">
         <h1 className="text-2xl font-semibold">Revision de solicitudes de organizacion</h1>
         <p className="mt-2 text-sm text-zinc-300">Rol: {roleLabel(role)}</p>
 
@@ -367,6 +367,6 @@ export default async function AdminRequestsPage({
           })}
         </div>
       </section>
-    </main>
+    </AdminWorkspaceShell>
   );
 }
