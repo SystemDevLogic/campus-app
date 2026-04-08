@@ -269,15 +269,15 @@ export default async function OrganizationAccessPage({
   const { stage, email, setupErrorDetail, infoMessage, setupMessage, passwordMessage } = getAccessPageState(query);
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col px-6 py-12 text-zinc-900 dark:text-zinc-100">
+    <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col px-4 py-8 text-zinc-900 sm:px-6 sm:py-12 dark:text-zinc-100">
       <Link href="/login" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
         {"<- Volver"}
       </Link>
 
-      <h1 className="mt-4 text-3xl font-semibold">Acceso de organizaciones</h1>
+      <h1 className="mt-4 text-2xl font-semibold sm:text-3xl">Acceso de organizaciones</h1>
       <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">Primero valida tu correo para continuar con OTP o clave.</p>
 
-      <section className="mt-8 rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-zinc-100">
+      <section className="mt-8 rounded-2xl border border-zinc-800 bg-zinc-900 p-4 text-zinc-100 sm:p-6">
         <h2 className="text-lg font-semibold">Paso 1: correo de organizacion</h2>
         <form action={checkOrganizationEmailAction} className="mt-4 space-y-3">
           <input

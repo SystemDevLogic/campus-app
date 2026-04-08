@@ -211,7 +211,7 @@ export default function OnboardingForm({
 
       <fieldset className="block">
         <legend className="mb-2 block text-sm text-zinc-300">Intereses (categorias)</legend>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
           {INTEREST_CATEGORIES.map((category) => {
             const selected = selectedInterests.includes(category);
             return (

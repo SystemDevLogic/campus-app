@@ -194,8 +194,8 @@ export default async function AdminAvailabilityPage({
       title="Disponibilidad admin"
       subtitle="Configura horarios, plataformas y enlaces fijos visibles para las organizaciones."
     >
-      <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-zinc-100">
-        <h1 className="text-2xl font-semibold">Configuracion de disponibilidad admin</h1>
+      <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4 text-zinc-100 sm:p-6">
+        <h1 className="text-xl font-semibold sm:text-2xl">Configuracion de disponibilidad admin</h1>
         <p className="mt-2 text-sm text-zinc-300">Rol: {roleLabel(role)}</p>
         <p className="mt-2 text-sm text-zinc-300">
           Las plataformas y links fijos que configures aqui son las opciones visibles para solicitudes de organizaciones.

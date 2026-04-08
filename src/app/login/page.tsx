@@ -35,8 +35,8 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-xl flex-col justify-center px-6">
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-zinc-100">
+    <main className="mx-auto flex min-h-screen w-full max-w-xl flex-col justify-center px-4 py-8 sm:px-6">
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 text-zinc-100 sm:p-6">
         <h1 className="text-2xl font-semibold">Entrar</h1>
         <p className="mt-2 text-sm text-zinc-300">
           Inicia sesion para crear y unirte a planes de tu universidad.

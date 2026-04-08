@@ -119,8 +119,8 @@ export default async function OrganizationDashboardPage({
       title={`Dashboard de ${organization.organization_name}`}
       subtitle="Gestiona planes, estado de organizacion y operaciones principales desde un panel lateral responsive."
     >
-      <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-zinc-100">
-        <h1 className="text-2xl font-semibold">Dashboard de organizacion</h1>
+      <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4 text-zinc-100 sm:p-6">
+        <h1 className="text-xl font-semibold sm:text-2xl">Dashboard de organizacion</h1>
         {welcome ? (
           <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
             Acceso inicial completado. Tu cuenta ya tiene contrasena.
@@ -170,16 +170,16 @@ export default async function OrganizationDashboardPage({
                     {plan.campus} · {new Intl.DateTimeFormat("es-EC", { dateStyle: "medium", timeStyle: "short" }).format(new Date(plan.starts_at))}
                   </p>
                   <p className="mt-1 text-xs text-zinc-500">Estado: {plan.status}</p>
-                  <div className="mt-2 flex gap-2">
+                  <div className="mt-2 flex flex-wrap gap-2">
                     <Link
                       href={`/plans/${plan.id}`}
-                      className="inline-flex rounded-lg border border-zinc-500 px-2 py-1 text-xs font-semibold text-zinc-100 hover:border-zinc-300"
+                      className="inline-flex w-full justify-center rounded-lg border border-zinc-500 px-2 py-1 text-xs font-semibold text-zinc-100 hover:border-zinc-300 sm:w-auto"
                     >
                       Abrir plan/chat
                     </Link>
                     <Link
                       href={`/plans/${plan.id}/edit`}
-                      className="inline-flex rounded-lg border border-zinc-500 px-2 py-1 text-xs font-semibold text-zinc-100 hover:border-zinc-300"
+                      className="inline-flex w-full justify-center rounded-lg border border-zinc-500 px-2 py-1 text-xs font-semibold text-zinc-100 hover:border-zinc-300 sm:w-auto"
                     >
                       Editar
                     </Link>
@@ -188,7 +188,7 @@ export default async function OrganizationDashboardPage({
                         <input type="hidden" name="planId" value={plan.id} />
                         <button
                           type="submit"
-                          className="inline-flex cursor-pointer rounded-lg border border-red-400 px-2 py-1 text-xs font-semibold text-red-300 hover:border-red-300"
+                          className="inline-flex w-full cursor-pointer justify-center rounded-lg border border-red-400 px-2 py-1 text-xs font-semibold text-red-300 hover:border-red-300 sm:w-auto"
                         >
                           Cancelar
                         </button>
@@ -201,31 +201,31 @@ export default async function OrganizationDashboardPage({
           )}
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           <Link
             href="/plans/new"
-            className="inline-flex rounded-lg bg-white px-3 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-200"
+            className="inline-flex w-full justify-center rounded-lg bg-white px-3 py-2 text-sm font-semibold text-zinc-900 hover:bg-zinc-200 sm:w-auto"
           >
             Crear plan
           </Link>
           <Link
             href="/plans"
-            className="inline-flex rounded-lg border border-zinc-500 px-3 py-2 text-sm font-semibold text-zinc-100 hover:border-zinc-300"
+            className="inline-flex w-full justify-center rounded-lg border border-zinc-500 px-3 py-2 text-sm font-semibold text-zinc-100 hover:border-zinc-300 sm:w-auto"
           >
             Ver planes
           </Link>
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-2">
+        <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           <Link
             href="/organizations/dashboard"
-            className="inline-flex rounded-lg border border-zinc-500 px-3 py-2 text-sm font-semibold text-zinc-100 hover:border-zinc-300"
+            className="inline-flex w-full justify-center rounded-lg border border-zinc-500 px-3 py-2 text-sm font-semibold text-zinc-100 hover:border-zinc-300 sm:w-auto"
           >
             Actualizar panel
           </Link>
           <Link
             href="/login"
-            className="inline-flex rounded-lg border border-zinc-500 px-3 py-2 text-sm font-semibold text-zinc-100 hover:border-zinc-300"
+            className="inline-flex w-full justify-center rounded-lg border border-zinc-500 px-3 py-2 text-sm font-semibold text-zinc-100 hover:border-zinc-300 sm:w-auto"
           >
             Ir a login principal
           </Link>
@@ -234,7 +234,7 @@ export default async function OrganizationDashboardPage({
         <form action={signOutOrganizationAction} className="mt-3">
           <button
             type="submit"
-            className="cursor-pointer rounded-lg border border-zinc-500 px-3 py-2 text-sm font-semibold text-zinc-100 hover:border-zinc-300"
+            className="w-full cursor-pointer rounded-lg border border-zinc-500 px-3 py-2 text-sm font-semibold text-zinc-100 hover:border-zinc-300 sm:w-auto"
           >
             Cerrar sesion de organizacion
           </button>

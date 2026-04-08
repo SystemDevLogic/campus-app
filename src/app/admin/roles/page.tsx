@@ -66,11 +66,27 @@ async function getAdminRoleContext(): Promise<AdminContext> {
 
   const userId = authData.user.id;
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role, role_assigned_at")
-    .eq("id", userId)
-    .maybeSingle();
+  const [profileResult, settingsResult, capabilitiesResult] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("role, role_assigned_at")
+      .eq("id", userId)
+      .maybeSingle(),
+    supabase
+      .from("app_settings")
+      .select("admins_can_manage_roles_globally")
+      .eq("id", 1)
+      .maybeSingle(),
+    supabase
+      .from("admin_capabilities")
+      .select("can_promote_general_users, can_demote_newer_admins, can_manage_roles")
+      .eq("admin_user_id", userId)
+      .maybeSingle(),
+  ]);
+
+  const { data: profile } = profileResult;
+  const { data: settings } = settingsResult;
+  const { data: capabilities } = capabilitiesResult;
 
   const role = (profile?.role ?? "general_user") as AppRole;
   const roleAssignedAt = profile?.role_assigned_at ?? new Date().toISOString();
@@ -78,18 +94,6 @@ async function getAdminRoleContext(): Promise<AdminContext> {
   if (!canReviewRoles(role)) {
     redirect("/dashboard");
   }
-
-  const { data: settings } = await supabase
-    .from("app_settings")
-    .select("admins_can_manage_roles_globally")
-    .eq("id", 1)
-    .maybeSingle();
-
-  const { data: capabilities } = await supabase
-    .from("admin_capabilities")
-    .select("can_promote_general_users, can_demote_newer_admins, can_manage_roles")
-    .eq("admin_user_id", userId)
-    .maybeSingle();
 
   const adminsCanManageRolesGlobally = settings?.admins_can_manage_roles_globally ?? true;
   const canManageRoles = capabilities?.can_manage_roles ?? true;
@@ -345,8 +349,8 @@ export default async function AdminRolesPage({
       title="Gobernanza de roles"
       subtitle="Promociona, degrada y configura capacidades administrativas desde un panel lateral centralizado."
     >
-      <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-zinc-100">
-        <h1 className="text-2xl font-semibold">Gestion de roles administrativos</h1>
+      <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4 text-zinc-100 sm:p-6">
+        <h1 className="text-xl font-semibold sm:text-2xl">Gestion de roles administrativos</h1>
         <p className="mt-2 text-sm text-zinc-300">Tu rol: {roleLabel(context.role)}</p>
 
         {promoted ? <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">Usuario promovido a admin.</p> : null}
@@ -367,7 +371,7 @@ export default async function AdminRolesPage({
           <section className="mt-6 rounded-xl border border-zinc-700 bg-zinc-950 p-4">
             <h2 className="text-lg font-semibold">Controles de superadmin</h2>
             <p className="mt-1 text-xs text-zinc-400">Define si los admins pueden gestionar roles a nivel global.</p>
-            <form action={updateGlobalRoleGovernanceAction} className="mt-3 flex flex-wrap items-center gap-3">
+            <form action={updateGlobalRoleGovernanceAction} className="mt-3 flex flex-col items-start gap-3 sm:flex-row sm:flex-wrap sm:items-center">
               <label className="inline-flex items-center gap-2 text-sm text-zinc-300">
                 <input
                   type="checkbox"
@@ -379,7 +383,7 @@ export default async function AdminRolesPage({
               </label>
               <button
                 type="submit"
-                className="rounded-lg bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-900"
+                className="w-full rounded-lg bg-zinc-100 px-3 py-2 text-xs font-semibold text-zinc-900 sm:w-auto sm:py-1"
               >
                 Guardar configuracion global
               </button>

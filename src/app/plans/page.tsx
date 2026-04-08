@@ -475,39 +475,42 @@ export default async function PlansPage({
   const organizerBlocked = filters.organizerBlocked === "1";
 
   const supabase = await createClient();
-  const actor = await resolveActorContext(supabase);
+  const [actor, plansResult] = await Promise.all([
+    resolveActorContext(supabase),
+    fetchPlans(supabase, { category, campus, date }),
+  ]);
   const userId = actor.userId;
   const role = actor.role;
   const allowPlanCreation = actor.isOrganization || canCreatePlans(role);
 
-  const { data: plans, error: plansError } = await fetchPlans(supabase, { category, campus, date });
+  const { data: plans, error: plansError } = plansResult;
 
   const planIds = plans?.map((plan) => plan.id) ?? [];
   const membershipByPlan = await buildMembershipMap(supabase, planIds, userId);
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-6 py-12 text-zinc-900 dark:text-zinc-100">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 py-8 text-zinc-900 sm:px-6 sm:py-12 dark:text-zinc-100">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-zinc-600 dark:text-zinc-400">Feed de planes</p>
-          <h1 className="mt-2 text-3xl font-semibold">Encuentra algo para hoy</h1>
+          <h1 className="mt-2 text-2xl font-semibold sm:text-3xl">Encuentra algo para hoy</h1>
         </div>
-        <div className="flex gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
           <Link
             href={actor.isOrganization ? "/organizations/dashboard" : "/dashboard"}
-            className="inline-flex rounded-lg border border-zinc-300 px-4 py-2 text-sm text-zinc-800 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-200 dark:hover:border-zinc-500"
+            className="inline-flex w-full justify-center rounded-lg border border-zinc-300 px-4 py-2 text-sm text-zinc-800 hover:border-zinc-400 sm:w-auto dark:border-zinc-700 dark:text-zinc-200 dark:hover:border-zinc-500"
           >
             Dashboard
           </Link>
           {allowPlanCreation ? (
             <Link
               href="/plans/new"
-              className="inline-flex rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-zinc-800"
+              className="inline-flex w-full justify-center rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-zinc-800 sm:w-auto"
             >
               Crear plan
             </Link>
           ) : (
-            <span className="inline-flex cursor-not-allowed rounded-lg bg-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">
+            <span className="inline-flex w-full cursor-not-allowed justify-center rounded-lg bg-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-600 sm:w-auto dark:bg-zinc-700 dark:text-zinc-300">
               Crear plan
             </span>
           )}
@@ -524,7 +527,7 @@ export default async function PlansPage({
         organizerBlocked={organizerBlocked}
       />
 
-      <form className="mt-6 grid gap-3 rounded-xl border border-zinc-200 bg-white p-4 sm:grid-cols-4 dark:border-zinc-800 dark:bg-zinc-900">
+      <form className="mt-6 grid gap-3 rounded-xl border border-zinc-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-4 dark:border-zinc-800 dark:bg-zinc-900">
         <label className="block">
           <span className="mb-1 block text-xs text-zinc-600 dark:text-zinc-400">Categoria</span>
           <select
@@ -561,7 +564,7 @@ export default async function PlansPage({
           />
         </label>
 
-        <div className="flex items-end gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-2">
           <button
             type="submit"
             className="w-full rounded-lg bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-100 hover:bg-zinc-800"

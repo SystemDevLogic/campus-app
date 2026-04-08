@@ -133,7 +133,7 @@ export default function ChatRoom({ planId, userId, initialMessages }: Readonly<C
   };
 
   return (
-    <div className="mt-6 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="mt-6 rounded-2xl border border-zinc-200 bg-white p-4 sm:p-5 dark:border-zinc-800 dark:bg-zinc-900">
       <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Chat del plan</h2>
 
       <div className="mt-4 max-h-[420px] space-y-3 overflow-y-auto rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-950">
@@ -147,7 +147,7 @@ export default function ChatRoom({ planId, userId, initialMessages }: Readonly<C
           return (
             <article
               key={message.id}
-              className={`max-w-[85%] rounded-xl px-3 py-2 text-sm ${
+              className={`max-w-[92%] rounded-xl px-3 py-2 text-sm sm:max-w-[85%] ${
                 isMe
                   ? "ml-auto bg-zinc-900 text-zinc-100 dark:bg-zinc-100 dark:text-zinc-900"
                   : "bg-white text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
@@ -172,12 +172,12 @@ export default function ChatRoom({ planId, userId, initialMessages }: Readonly<C
           placeholder="Escribe un mensaje..."
           className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
         />
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
           <span className="text-xs text-zinc-500 dark:text-zinc-400">{messageText.length}/500</span>
           <button
             type="submit"
             disabled={sending}
-            className="cursor-pointer rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+            className="w-full cursor-pointer rounded-lg bg-zinc-900 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
           >
             {sending ? "Enviando..." : "Enviar"}
           </button>

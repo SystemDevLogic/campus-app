@@ -55,8 +55,8 @@ export default async function OnboardingPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-xl flex-col justify-center px-6 py-16 text-zinc-100">
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
+    <main className="mx-auto flex min-h-screen w-full max-w-xl flex-col justify-center px-4 py-8 text-zinc-100 sm:px-6 sm:py-12">
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 sm:p-6">
         <h1 className="text-2xl font-semibold">Completa tu perfil</h1>
         <p className="mt-2 text-sm text-zinc-300">
           Necesitamos estos datos para mostrarte planes relevantes en tu campus.

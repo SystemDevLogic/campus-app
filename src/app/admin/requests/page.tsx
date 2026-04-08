@@ -269,8 +269,8 @@ export default async function AdminRequestsPage({
       title="Revision de solicitudes"
       subtitle="Gestiona aprobaciones, rechazos y creacion de organizaciones desde un panel unificado."
     >
-      <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-zinc-100">
-        <h1 className="text-2xl font-semibold">Revision de solicitudes de organizacion</h1>
+      <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4 text-zinc-100 sm:p-6">
+        <h1 className="text-xl font-semibold sm:text-2xl">Revision de solicitudes de organizacion</h1>
         <p className="mt-2 text-sm text-zinc-300">Rol: {roleLabel(role)}</p>
 
         {approved ? (
@@ -307,8 +307,8 @@ export default async function AdminRequestsPage({
 
             return (
               <article key={requestItem.id} className="rounded-xl border border-zinc-700 bg-zinc-950 p-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h2 className="text-lg font-semibold text-zinc-100">{requestItem.organization_name}</h2>
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <h2 className="text-base font-semibold text-zinc-100 sm:text-lg">{requestItem.organization_name}</h2>
                   <span className={`rounded-full border px-2 py-1 text-xs font-semibold ${statusBadgeClass(status)}`}>
                     {statusLabel(status)}
                   </span>

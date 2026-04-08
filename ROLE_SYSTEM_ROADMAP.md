@@ -1,6 +1,7 @@
 # Role System Roadmap (Step by Step)
 
 Fecha: 2026-03-07
+Ultima actualizacion: 2026-04-07
 
 Este roadmap divide la implementacion en entregas pequenas para evitar una sola tarea pesada.
 
@@ -72,11 +73,51 @@ Este roadmap divide la implementacion en entregas pequenas para evitar una sola 
   - Flujo OTP para cuentas de organizaciones aprobadas.
   - Primera entrada de organizacion con creacion de password.
 
+## Estado real al 2026-04-07
+- Paso 1: completado.
+- Paso 2: completado.
+- Paso 3: completado (baseline + operacion).
+- Paso 4: completado.
+- Paso 5: completado.
+- Paso 6: mayormente completado (login superadmin, OTP, primer acceso con password, dashboard y navegacion).
+
+## Pendientes de cierre MVP (fuera del sistema de roles)
+- Responsive completo en todas las pantallas clave.
+- PWA instalable + fallback offline basico.
+- Analitica base para embudo de activacion.
+- Checklist de release + smoke tests post deploy.
+
+## Sprint operativo recomendado (7 dias)
+Dia 1
+- Actualizar documentos de estado y congelar alcance de la semana.
+- Definir lista final P0/P1 con criterio de aceptacion por item.
+
+Dia 2
+- Cerrar responsive de pantallas criticas (login, onboarding, dashboard, planes, chat, admin).
+
+Dia 3
+- Completar PWA (manifest, iconos, instalacion, service worker basico).
+
+Dia 4
+- Instrumentar eventos base (signup_completed, onboarding_completed, plan_created, plan_joined, message_sent).
+
+Dia 5
+- Hardening de flujos admin/superadmin/organizacion (solicitud, aprobacion, OTP, acceso, roles, auditoria).
+
+Dia 6
+- QA integral + correcciones de bugs bloqueantes.
+
+Dia 7
+- Release a produccion + smoke test + reporte de salida.
+
 ## Checklist de ejecucion por sprint
 - Ejecutar en Supabase SQL Editor:
   - `supabase/sql/004_roles_and_organizations_foundation.sql`
+- Ejecutar sincronizacion de correo en `profiles` si aplica:
+  - `supabase/sql/008_sync_email_auth_users_profiles.sql`
 - Confirmar que no rompe lo existente:
   - Login
   - Onboarding
   - Planes (crear/unirse/chat)
-- Luego arrancar Paso 2 en frontend.
+- Flujos de organizaciones (solicitud, aprobacion, OTP, password)
+- Flujos de admin/superadmin (roles, availability, requests, audit)

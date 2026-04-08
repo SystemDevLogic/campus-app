@@ -53,33 +53,37 @@ export default async function PlanDetailPage({ params }: PlanDetailPageProps) {
 
   const userId = await resolvePlanActorUserId(supabase);
 
-  const { data: membership } = await supabase
-    .from("plan_members")
-    .select("plan_id")
-    .eq("plan_id", planId)
-    .eq("user_id", userId)
-    .maybeSingle();
+  const [membershipResult, planResult, messageResult] = await Promise.all([
+    supabase
+      .from("plan_members")
+      .select("plan_id")
+      .eq("plan_id", planId)
+      .eq("user_id", userId)
+      .maybeSingle(),
+    supabase
+      .from("plans")
+      .select("id, title, description, category, campus, starts_at")
+      .eq("id", planId)
+      .maybeSingle(),
+    supabase
+      .from("messages")
+      .select("id, user_id, body, created_at")
+      .eq("plan_id", planId)
+      .order("created_at", { ascending: true })
+      .limit(200),
+  ]);
+
+  const { data: membership } = membershipResult;
+  const { data: plan, error: planError } = planResult;
+  const { data: messageRows } = messageResult;
 
   if (!membership) {
     redirect("/plans?joinError=1");
   }
 
-  const { data: plan, error: planError } = await supabase
-    .from("plans")
-    .select("id, title, description, category, campus, starts_at")
-    .eq("id", planId)
-    .maybeSingle();
-
   if (planError || !plan) {
     redirect("/plans");
   }
-
-  const { data: messageRows } = await supabase
-    .from("messages")
-    .select("id, user_id, body, created_at")
-    .eq("plan_id", planId)
-    .order("created_at", { ascending: true })
-    .limit(200);
 
   const userIds = Array.from(new Set((messageRows ?? []).map((row) => row.user_id)));
   const profileNameById = new Map<string, string>();
@@ -105,14 +109,14 @@ export default async function PlanDetailPage({ params }: PlanDetailPageProps) {
   }));
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col px-6 py-12 text-zinc-900 dark:text-zinc-100">
+    <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col px-4 py-8 text-zinc-900 sm:px-6 sm:py-12 dark:text-zinc-100">
       <Link href="/plans" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
         {"<- Volver al feed"}
       </Link>
 
-      <section className="mt-4 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+      <section className="mt-4 rounded-2xl border border-zinc-200 bg-white p-4 sm:p-6 dark:border-zinc-800 dark:bg-zinc-900">
         <p className="text-xs uppercase tracking-[0.2em] text-zinc-600 dark:text-zinc-400">{plan.category}</p>
-        <h1 className="mt-2 text-2xl font-semibold">{plan.title}</h1>
+        <h1 className="mt-2 text-xl font-semibold sm:text-2xl">{plan.title}</h1>
         <p className="mt-3 text-zinc-700 dark:text-zinc-300">{plan.description}</p>
         <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
           {plan.campus} · {new Intl.DateTimeFormat("es-EC", { dateStyle: "medium", timeStyle: "short" }).format(new Date(plan.starts_at))}

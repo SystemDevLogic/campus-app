@@ -347,42 +347,46 @@ export default async function OrganizationRequestPage({
   }
 
   const role = (profile.role ?? "general_user") as AppRole;
-  const { data: orgTypes } = await supabase
-    .from("organization_types")
-    .select("id, key, label")
-    .eq("is_active", true)
-    .order("label", { ascending: true });
+  const [orgTypesResult, adminsResult, availabilitiesResult, occupiedSlotsResult, latestRequestSummary] = await Promise.all([
+    supabase
+      .from("organization_types")
+      .select("id, key, label")
+      .eq("is_active", true)
+      .order("label", { ascending: true }),
+    supabase
+      .from("profiles")
+      .select("id, first_name, last_name")
+      .in("role", ["admin", "superadmin"])
+      .eq("is_active", true)
+      .order("role_assigned_at", { ascending: true }),
+    supabase
+      .from("admin_availability")
+      .select("admin_user_id, weekday, starts_at, ends_at, slot_minutes, default_meeting_url, platform, custom_platform_name")
+      .eq("is_active", true)
+      .order("weekday", { ascending: true }),
+    supabase
+      .from("organization_creation_requests")
+      .select("requested_admin_id, meeting_starts_at")
+      .not("requested_admin_id", "is", null)
+      .in("status", ["pending", "approved"]),
+    sent ? getLatestRequestSummary(supabase, authData.user.id) : Promise.resolve(null),
+  ]);
 
-  const { data: admins } = await supabase
-    .from("profiles")
-    .select("id, first_name, last_name")
-    .in("role", ["admin", "superadmin"])
-    .eq("is_active", true)
-    .order("role_assigned_at", { ascending: true });
-
-  const { data: availabilities } = await supabase
-    .from("admin_availability")
-    .select("admin_user_id, weekday, starts_at, ends_at, slot_minutes, default_meeting_url, platform, custom_platform_name")
-    .eq("is_active", true)
-    .order("weekday", { ascending: true });
-
-  const { data: occupiedSlots } = await supabase
-    .from("organization_creation_requests")
-    .select("requested_admin_id, meeting_starts_at")
-    .not("requested_admin_id", "is", null)
-    .in("status", ["pending", "approved"]);
+  const { data: orgTypes } = orgTypesResult;
+  const { data: admins } = adminsResult;
+  const { data: availabilities } = availabilitiesResult;
+  const { data: occupiedSlots } = occupiedSlotsResult;
 
   const strictScheduling = (availabilities?.length ?? 0) > 0;
-  const latestRequestSummary = sent ? await getLatestRequestSummary(supabase, authData.user.id) : null;
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-6 py-12 text-zinc-900 dark:text-zinc-100">
+    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 py-8 text-zinc-900 sm:px-6 sm:py-12 dark:text-zinc-100">
       <Link href="/dashboard" className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
         {"<- Volver al dashboard"}
       </Link>
 
-      <section className="mt-4 rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-zinc-100">
-        <h1 className="text-2xl font-semibold">Solicitud de creacion de organizacion</h1>
+      <section className="mt-4 rounded-2xl border border-zinc-800 bg-zinc-900 p-4 text-zinc-100 sm:p-6">
+        <h1 className="text-xl font-semibold sm:text-2xl">Solicitud de creacion de organizacion</h1>
         <p className="mt-2 text-sm text-zinc-300">Tu rol actual: {roleLabel(role)}</p>
 
         <RequestFeedback

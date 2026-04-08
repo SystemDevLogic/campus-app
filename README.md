@@ -65,8 +65,10 @@ supabase/
 ```
 
 ## Siguiente paso de desarrollo
-1. Implementar login (Google o magic link).
-2. Onboarding de perfil (`university`, `age`, `interests`).
-3. CRUD de planes con filtros.
-4. Chat realtime por plan.
-5. PWA instalable.
+Estado actual: login, onboarding, planes, chat, roles y flujo de organizaciones ya estan implementados.
+
+Prioridad actual de cierre MVP:
+1. Responsive completo de pantallas criticas.
+2. PWA instalable.
+3. Analitica base del embudo de activacion.
+4. Checklist de release y despliegue en Vercel.

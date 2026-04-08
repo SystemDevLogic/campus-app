@@ -69,11 +69,11 @@ export default async function DashboardPage({
 
   return (
     <MainWorkspaceShell role={role}>
-      <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-zinc-100">
-      <h1 className="text-3xl font-semibold">
+      <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4 text-zinc-100 sm:p-6">
+      <h1 className="text-2xl font-semibold sm:text-3xl">
         Hola, {profile.first_name} {profile.last_name}
       </h1>
-      <p className="mt-2 text-zinc-300">
+      <p className="mt-2 text-sm text-zinc-300 sm:text-base">
         Perfil listo. Siguiente objetivo: CRUD de planes y feed social.
       </p>
 
@@ -93,7 +93,7 @@ export default async function DashboardPage({
         Rol: {roleLabel(role)}
       </p>
 
-      <div className="mt-6">
+      <div className="mt-6 flex flex-wrap gap-2">
         {allowPlanCreation ? (
           <Link
             href="/plans/new"
@@ -104,7 +104,7 @@ export default async function DashboardPage({
         ) : null}
         <Link
           href="/plans"
-          className={`${allowPlanCreation ? "ml-2 " : ""}inline-flex rounded-lg border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-800 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-200 dark:hover:border-zinc-500`}
+          className="inline-flex rounded-lg border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-800 hover:border-zinc-400 dark:border-zinc-700 dark:text-zinc-200 dark:hover:border-zinc-500"
         >
           Ver planes
         </Link>

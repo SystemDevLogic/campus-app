@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import AdminWorkspaceShell from "@/components/ui/AdminWorkspaceShell";
 import { type AppRole, roleLabel } from "@/lib/constants/roles";
 import EmailQuickActions from "@/components/ui/EmailQuickActions";
-import { createServiceClient } from "@/lib/supabase/service";
 import { createClient } from "@/lib/supabase/server";
 
 type AuditRow = {
@@ -218,16 +217,16 @@ export default async function AdminAuditPage({
       title="Auditoria de cambios"
       subtitle="Consulta historial, responsables y motivos con filtros y exportacion CSV."
     >
-      <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-zinc-100">
-        <h1 className="text-2xl font-semibold">Auditoria de cambios de rol</h1>
+      <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4 text-zinc-100 sm:p-6">
+        <h1 className="text-xl font-semibold sm:text-2xl">Auditoria de cambios de rol</h1>
         <p className="mt-2 text-sm text-zinc-300">Rol actual: {roleLabel(currentRole)}</p>
 
-        <form className="mt-4 grid gap-2 rounded-xl border border-zinc-700 bg-zinc-950 p-3 md:grid-cols-5" method="get">
+        <form className="mt-4 grid grid-cols-1 gap-2 rounded-xl border border-zinc-700 bg-zinc-950 p-3 sm:grid-cols-2 lg:grid-cols-5" method="get">
           <input
             name="q"
             defaultValue={filters.text}
             placeholder="Buscar por nombre, correo o motivo"
-            className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 md:col-span-2"
+            className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 sm:col-span-2 lg:col-span-2"
           />
           <select
             name="role"
@@ -252,23 +251,23 @@ export default async function AdminAuditPage({
             defaultValue={filters.toDate}
             className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-100"
           />
-          <div className="md:col-span-5 flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-5">
             <button
               type="submit"
-              className="rounded-lg bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-900"
+              className="w-full rounded-lg bg-zinc-100 px-3 py-2 text-xs font-semibold text-zinc-900 sm:w-auto sm:py-1"
             >
               Aplicar filtros
             </button>
             <Link
               href="/admin/audit"
-              className="rounded-lg border border-zinc-600 px-3 py-1 text-xs font-semibold text-zinc-200"
+              className="w-full rounded-lg border border-zinc-600 px-3 py-2 text-center text-xs font-semibold text-zinc-200 sm:w-auto sm:py-1"
             >
               Limpiar
             </Link>
             <a
               href={exportHref}
               data-no-global-loader="true"
-              className="rounded-lg border border-emerald-500/50 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300"
+              className="w-full rounded-lg border border-emerald-500/50 bg-emerald-500/10 px-3 py-2 text-center text-xs font-semibold text-emerald-300 sm:w-auto sm:py-1"
             >
               Exportar CSV
             </a>

@@ -50,31 +50,52 @@ function isEligibleClickTarget(target: HTMLElement, event: MouseEvent) {
 export default function GlobalNavigationLoader() {
   const pathname = usePathname();
   const [visible, setVisible] = useState(false);
+  const showDelayTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loaderDelayMs = 300;
 
-  useEffect(() => {
-    setVisible(false);
+  const clearTimers = () => {
+    if (showDelayTimeoutRef.current) {
+      globalThis.clearTimeout(showDelayTimeoutRef.current);
+      showDelayTimeoutRef.current = null;
+    }
+
     if (hideTimeoutRef.current) {
       globalThis.clearTimeout(hideTimeoutRef.current);
       hideTimeoutRef.current = null;
     }
+  };
+
+  useEffect(() => {
+    setVisible(false);
+    clearTimers();
   }, [pathname]);
 
   useEffect(() => {
     const hideLoader = () => {
       setVisible(false);
-      if (hideTimeoutRef.current) {
-        globalThis.clearTimeout(hideTimeoutRef.current);
-        hideTimeoutRef.current = null;
-      }
+      clearTimers();
     };
 
     const showLoader = () => {
-      setVisible(true);
-      if (hideTimeoutRef.current) {
-        globalThis.clearTimeout(hideTimeoutRef.current);
+      if (showDelayTimeoutRef.current) {
+        return;
       }
 
+      showDelayTimeoutRef.current = globalThis.setTimeout(() => {
+        showDelayTimeoutRef.current = null;
+        setVisible(true);
+        if (hideTimeoutRef.current) {
+          globalThis.clearTimeout(hideTimeoutRef.current);
+        }
+
+        hideTimeoutRef.current = globalThis.setTimeout(hideLoader, 12000);
+      }, loaderDelayMs);
+    };
+
+    const forceShowLoader = () => {
+      clearTimers();
+      setVisible(true);
       hideTimeoutRef.current = globalThis.setTimeout(hideLoader, 12000);
     };
 
@@ -106,6 +127,11 @@ export default function GlobalNavigationLoader() {
       hideLoader();
     };
 
+    const handleBeforeUnload = () => {
+      // Para navegaciones fuera de SPA, mostrar inmediatamente.
+      forceShowLoader();
+    };
+
     const originalPushState = globalThis.history.pushState;
     const originalReplaceState = globalThis.history.replaceState;
 
@@ -125,19 +151,19 @@ export default function GlobalNavigationLoader() {
     document.addEventListener("submit", handleSubmit, true);
     globalThis.addEventListener("popstate", handleNavigationDone);
     globalThis.addEventListener("hashchange", handleNavigationDone);
+    globalThis.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
       document.removeEventListener("click", handleClick, true);
       document.removeEventListener("submit", handleSubmit, true);
       globalThis.removeEventListener("popstate", handleNavigationDone);
       globalThis.removeEventListener("hashchange", handleNavigationDone);
+      globalThis.removeEventListener("beforeunload", handleBeforeUnload);
       globalThis.history.pushState = originalPushState;
       globalThis.history.replaceState = originalReplaceState;
-      if (hideTimeoutRef.current) {
-        globalThis.clearTimeout(hideTimeoutRef.current);
-      }
+      clearTimers();
     };
-  }, []);
+  }, [loaderDelayMs]);
 
   if (!visible) {
     return null;
