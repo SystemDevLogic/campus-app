@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/browser";
+import { trackClientEvent } from "@/lib/analytics/client";
 import { INTEREST_CATEGORIES } from "@/lib/constants/onboarding";
 import { type AppRole, roleLabel } from "@/lib/constants/roles";
 
@@ -129,6 +130,11 @@ export default function OnboardingForm({
       setLoading(false);
       return;
     }
+
+    void trackClientEvent("onboarding_completed", {
+      role: showRoleSelector ? selectedRole : "general_user",
+      interestsCount: selectedInterests.length,
+    });
 
     router.push("/dashboard");
     router.refresh();

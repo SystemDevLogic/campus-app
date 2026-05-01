@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { trackServerEvent } from "@/lib/analytics/events";
 import { PLAN_CATEGORIES } from "@/lib/constants/plans";
 import { canCreatePlans, type AppRole } from "@/lib/constants/roles";
 import { getOrganizationSessionCookieName, readOrganizationSessionToken } from "@/lib/organizations/auth";
@@ -179,6 +180,15 @@ async function joinPlanAction(formData: FormData) {
   if (insertError) {
     redirect("/plans?joinError=1");
   }
+
+  await trackServerEvent(supabase, "plan_joined", {
+    userId,
+    source: "server",
+    metadata: {
+      planId,
+      role: actor.role,
+    },
+  });
 
   revalidatePath("/plans");
   redirect("/plans?joined=1");

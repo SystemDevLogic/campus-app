@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { getOrganizationSessionCookieName, readOrganizationSessionToken } from "@/lib/organizations/auth";
+import { trackServerEvent } from "@/lib/analytics/events";
 import { canCreatePlans, type AppRole } from "@/lib/constants/roles";
 import { PLAN_CATEGORIES } from "@/lib/constants/plans";
 import { createClient } from "@/lib/supabase/server";
@@ -105,6 +106,16 @@ async function createOrganizationPlanAction(formData: FormData) {
   if (memberError) {
     redirect("/plans/new?orgError=member");
   }
+
+  await trackServerEvent(supabase, "plan_created", {
+    userId: managerUserId,
+    source: "server",
+    metadata: {
+      context: "organization",
+      category,
+      hasCapacity: capacityNumber !== null,
+    },
+  });
 
   revalidatePath("/plans");
   redirect("/plans?created=1");

@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/browser";
+import { trackClientEvent } from "@/lib/analytics/client";
 import { PLAN_CATEGORIES } from "@/lib/constants/plans";
 
 type PlanCategory = (typeof PLAN_CATEGORIES)[number];
@@ -106,6 +107,11 @@ export default function CreatePlanForm({ userId, defaultCampus }: CreatePlanForm
       setLoading(false);
       return;
     }
+
+    void trackClientEvent("plan_created", {
+      category,
+      hasCapacity: capacityNumber !== null,
+    });
 
     router.push("/plans?created=1");
     router.refresh();

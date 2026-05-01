@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { trackClientEvent } from "@/lib/analytics/client";
 import { createClient } from "@/lib/supabase/browser";
 
 type MessageItem = {
@@ -122,6 +123,11 @@ export default function ChatRoom({ planId, userId, initialMessages }: Readonly<C
       setSending(false);
       return;
     }
+
+    void trackClientEvent("message_sent", {
+      planId,
+      length: body.length,
+    });
 
     setMessageText("");
     setSending(false);
